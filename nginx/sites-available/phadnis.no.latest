@@ -1,0 +1,70 @@
+server {
+       listen 80;
+       listen [::]:80;
+
+       server_name phadnis.no www.phadnis.no;
+       listen 443 ssl;
+       # ssl on;
+       ssl_certificate /usr/local/nginx/cert/phadnis.pem;
+       ssl_certificate_key /usr/local/nginx/cert/phadnis.key;
+
+       root /var/www/phadnis.no/html;
+       # root /home/ajeet-dev/node_apps/com.utes.auth.protocol.exchange_new;
+       index index.html;
+       
+       access_log /var/log/nginx/phadnis.no.access.log;
+       error_log /var/log/nginx/phadnis.no.error.log;
+       
+       
+
+       # location /demo_user {
+       #         try_files $uri $uri/ @express; # instead of 404, proxy back to express using a named location block;
+		    # source: https://stackoverflow.com/a/15467555/8436941
+       # 	}
+       location @express {
+       		proxy_pass https://phadnis.no:30010;
+       }
+       # rewrite /node/(.*)  /$1 break;
+       
+       location /convert {
+		proxy_set_header Host $host;
+		proxy_set_header client-ip $remote_addr;
+		proxy_set_header   X-Forwarded-Host $http_host;
+	       proxy_set_header   X-Forwarded-Proto "https";
+	       proxy_set_header   X-Real-IP $remote_addr;
+	       proxy_set_header   X-Forwarded-Port $server_port;
+	       proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+	       proxy_set_header Connection "";
+	       proxy_read_timeout 319s;
+	       proxy_http_version 1.1; 
+	       #rewrite /demo_user/(.*)  /$1 break;
+	       proxy_pass https://phadnis.no:30010/demo_user;
+ 
+    }
+   location /client_start {
+        proxy_set_header Host $host;    
+        proxy_set_header client-ip $remote_addr;
+        proxy_set_header   X-Forwarded-Host $http_host;
+       proxy_set_header   X-Forwarded-Proto $scheme;
+       proxy_set_header   X-Real-IP $remote_addr;
+       proxy_set_header   X-Forwarded-Port $server_port;
+       proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header Connection "";
+       proxy_read_timeout 319s;
+       proxy_http_version 1.1;       	
+       proxy_pass https://phadnis.no:30005/;
+   }
+   location /mldl/ {
+        proxy_set_header Host $host;    
+        proxy_set_header client-ip $remote_addr;
+        proxy_set_header   X-Forwarded-Host $http_host;
+       proxy_set_header   X-Forwarded-Proto $scheme;
+       proxy_set_header   X-Real-IP $remote_addr;
+       proxy_set_header   X-Forwarded-Port $server_port;
+       proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header Connection "";
+       proxy_read_timeout 319s;
+       proxy_http_version 1.1;
+       proxy_pass https://phadnis.no:30015;
+   }
+}
