@@ -1,0 +1,138 @@
+#   The expose tag will let you expose ports without publishing them to the 
+#   host machine, but they will be exposed to the containers networks.
+#   https://docs.docker.com/compose/compose-file/#expose
+#   The ports tag will be mapping the host port with the container port HOST:CONTAINER
+#   https://docs.docker.com/compose/compose-file/#ports
+#
+version: '3'
+services:
+   nodejs_client:
+     hostname: ajeetdev
+#     container_name: nodejs_client
+     restart: always
+     build:
+       context: .
+       dockerfile: com.utes.cert.crypto/Dockerfile
+     env_file: ./com.utes.cert.crypto/.env
+     ports:
+       -  "30005:30005"
+       -  "30085:30085"
+     links:
+       - mongodb
+     depends_on:
+      - mongodb
+     environment:
+       WAIT_HOSTS: mongodb:27017
+     networks:
+       - utesDockerNetwork
+     tty: true
+     expose:
+       -  "30005/tcp"
+       -  "30085/tcp"
+     volumes:
+       -  /home/ajeet/node_apps/com.utes.cert.crypto:/home/ajeet/node_src/com.utes.cert.crypto
+   nodejs_convert:
+     hostname: ajeetdev
+     restart: always
+     build:
+       context: .
+       dockerfile: com.utes.auth.protocol.exchange_new/Dockerfile
+     env_file: ./com.utes.auth.protocol.exchange_new/.env
+     ports:
+       -  "30010:30010"
+       -  "30082:30082"
+     links:
+       - mongodb
+     depends_on:
+       - mongodb
+     environment:
+       WAIT_HOSTS: mongodb:27017
+     networks:
+       - utesDockerNetwork
+     tty: true
+     expose:
+       - "30010/tcp"
+       - "30082/tcp"
+      
+#    environment:
+#      NODE_ENV=production
+     volumes:
+      -  /home/ajeet/node_apps/com.utes.auth.protocol.exchange_new:/home/ajeet/node_src/com.utes.auth.protocol.exchange_new
+   
+   nodejs_mldl:
+     hostname: ajeetdev
+     restart: always
+     build:
+       context: .
+       dockerfile: python_apps/Dockerfile
+     env_file: ./python_apps/.env
+     ports:
+       -  "30015:30015"
+     links:
+       - mongodb
+     depends_on:
+       - mongodb
+     environment:
+       WAIT_HOSTS: mongodb:27017
+     networks:
+       - utesDockerNetwork
+     tty: true
+     expose:
+       - "30015/tcp"
+      
+#    environment:
+#      NODE_ENV=production
+     volumes:
+      -  /home/ajeet/node_apps/python_apps:/home/ajeet/node_src/python_apps
+
+   
+   nginxmgr:
+     hostname: ajeetdev
+     image: 'nginx:latest'
+     restart: unless-stopped
+     ports:
+       - '80:80'
+       - '81:81'
+       - '443:443'
+     volumes:
+       - ./data:/data
+       - ./letsencrypt:/etc/letsencrypt
+     networks:
+       - utesDockerNetwork
+     tty: true
+     expose:
+       - '80/tcp'
+       - '81/tcp'
+       - '443/tcp'
+   mongodb:
+     hostname: ajeetdev
+     container_name: mongodb
+     image: mongo:latest
+     volumes:
+       - /home/ajeet/node_src/mongodb:/data/db
+     ports:
+       -  27017:27017
+     expose:
+       - "27017/tcp"
+     restart: unless-stopped
+     env_file:  ./com.utes.auth.protocol.exchange_new/.env
+     environment:
+       - MONGO_INITDB_ROOT_USERNAME=root
+       - MONGO_INITDB_ROOT_PASSWORD=ajeet78654321
+       - MONGO_INITDB_DATABASE=admin
+       - DB_HOST=mongodb
+       - DB_USER=root
+       - DB_PASSWORD=ajeet78654321
+       - DB_NAME=auth_users
+       - DB_PORT=27017
+     networks:
+       - utesDockerNetwork
+     tty: true
+     stdin_open: true
+     command: tail -f /dev/null
+networks:
+  utesDockerNetwork:
+    driver: bridge
+
+
+
